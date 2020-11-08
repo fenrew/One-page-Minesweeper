@@ -88,7 +88,6 @@
         
         const Minesweeper = () => {
             const newArr = generateMines()
-            
             const showBlock = (minesArr, pos) => {
                 showBlockLoop(minesArr, pos)
                 setSweeper({
@@ -97,7 +96,7 @@
                 })
             }
             
-            const [{minesArr, board }, setSweeper] = React.useState({
+            const [{ minesArr, board }, setSweeper] = React.useState({
                 minesArr: newArr,
                 board: renderBoard(newArr, showBlock),
             })
