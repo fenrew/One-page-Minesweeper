@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <title>Minesweeper-min</title>
+</head>
+<body>
+    <style media="screen">
+        .block {
+            display: inline-block;
+            padding: 2px 5px;
+        };
+    </style>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const generateMines = (numOfBlocks = 96, numOfMines = 6) => {
+            let mines = numOfMines, tries = 0
+            const rows = Math.floor(Math.sqrt(numOfBlocks)), columns = Math.ceil(numOfBlocks/rows)
+            const minesArr = Array.from({length: rows}, () => Array(columns).fill().map(() => {
+                return { show: false, isMine: false, nearbyMines: 0 }
+            }))
+
+            while(mines > 0 && tries < 30){
+                const randomRow = Math.floor(Math.random() * minesArr.length)
+                const randomCol = Math.floor(Math.random() * minesArr[randomRow].length)
+                const blockUnit = minesArr[randomRow][randomCol]
+                if(!blockUnit.isMine){
+                    mines -= 1
+                    blockUnit.isMine = true
+                }
+                tries -= 1
+            }
+         
+            minesArr.forEach((row, yIndex) => row.forEach((blockUnit, xIndex) => {
+                if(blockUnit.isMine) return
+                for(let y = -1; y <= 1; y++){
+                    for(let x = -1; x <= 1; x++){
+                        if(minesArr[y + yIndex] && minesArr[y + yIndex][x + xIndex] && minesArr[y + yIndex][x + xIndex].isMine) blockUnit.nearbyMines += 1
+                    }
+                }
+            }))
+
+            return minesArr
+        }
+
+        const Block = (props) => {
+            const {nearbyMines, show, isMine} = props.blockUnit
+            const [style, setStyle] = React.useState({
+                flag: false
+            })
+
+            const contextMenuHandler = (e) => {
+                e.preventDefault()
+                setStyle({ flag: !style.flag })
+            }
+
+            return (
+                <div style={{backgroundColor: `${style.flag ? "red" : "white"}`}} onContextMenu={contextMenuHandler}>
+                    {show ? isMine ? "m" : nearbyMines : "X"}
+                </div>
+            )
+        }
+
+        const renderBoard = (minesArr, showBlock) => 
+            minesArr.map((row, y) => (
+                <div key={y}>
+                    {row.map((blockUnit, x) =>
+                        <div className="block" key={`${x}`} onClick={() => showBlock(minesArr, {y, x})}>
+                            <Block
+                            pos={{y, x}} 
+                            blockUnit={blockUnit}  
+                            />
+                        </div>
+                        )
+                    }
+                        <br />
+                </div>
+                )
+            )
+        
+        const Minesweeper = () => {
+            const [sweeper, setSweeper] = React.useState({
+                minesArr: [],
+                board: [],
+            })
+            const {minesArr, board } = sweeper
+
+            const showBlock = (minesArr, pos) => {
+                showBlockLoop(minesArr, pos)
+                setSweeper({
+                    minesArr,
+                    board: renderBoard(minesArr, showBlock)
+                })
+            }
+
+            const showBlockLoop = (minesArr, pos) => {
+                const {y, x} = pos
+
+                minesArr[y][x].show = true
+
+                if(minesArr[y][x].isMine) return location.reload()
+
+                if(minesArr[y][x].nearbyMines !== 0) return 
+
+                let changed = true
+                let increment = 0
+                while(changed){
+                    changed = false
+                    for(let yPos = -1; yPos <= 1; yPos++){
+                        for(let xPos = -1; xPos <= 1; xPos++){
+                            if(minesArr[y + yPos] && minesArr[y + yPos][x + xPos] && !minesArr[y + yPos][x + xPos].show) {
+                                minesArr[y + yPos][x + xPos].show = true
+                                showBlockLoop(minesArr, {y: y + yPos, x: x + xPos})
+                                changed = true
+                                increment += 1
+                            }
+                    }
+                }
+               }
+            }
+
+            const newGame = () => {
+                const newarr = generateMines()
+
+                setSweeper({
+                    minesArr: newarr,
+                    board: renderBoard(newarr, showBlock)
+                })
+            }
+
+            React.useEffect(() => {
+                newGame()   
+            }, [])
+
+            return (
+            <div>
+                {board}
+            </div>
+            )
+        }
+
+        ReactDOM.render(
+            <Minesweeper />,
+            document.getElementById("root")
+        )
+    </script>
+</body>
+</html>
