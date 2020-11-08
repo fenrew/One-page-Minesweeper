@@ -20,19 +20,21 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        const checkAroundHelper = (func) => {
+            for(let y = -1; y <= 1; y++){
+                for(let x = -1; x <= 1; x++) func(y, x)
+            }
+        }
+
         const generateMines = () => {
             const minesArr = Array.from({length: 10}, () => Array(15).fill().map(() => {
-                return { show: false, isMine: Math.random() < 0.2, nearbyMines: 0 }
+                return { show: false, isMine: Math.random() < 0.14, nearbyMines: 0 }
             }))
          
-            minesArr.forEach((row, yIndex) => row.forEach((blockUnit, xIndex) => {
-                if(blockUnit.isMine) return
-                for(let y = -1; y <= 1; y++){
-                    for(let x = -1; x <= 1; x++){
-                        if(minesArr[y + yIndex] && minesArr[y + yIndex][x + xIndex] && minesArr[y + yIndex][x + xIndex].isMine) blockUnit.nearbyMines += 1
-                    }
-                }
-            }))
+            minesArr.forEach((row, yIndex) => row.forEach((blockUnit, xIndex) => 
+                blockUnit.isMine || checkAroundHelper((y, x) => 
+                (minesArr[y + yIndex] && minesArr[y + yIndex][x + xIndex] && minesArr[y + yIndex][x + xIndex].isMine) && (blockUnit.nearbyMines += 1)) // minesArr[y + yIndex][x + xIndex]?.isMine   => it seems like babel does not yet support optional chaining hence the ugly if statement  
+            ))
 
             return minesArr
         }
@@ -69,31 +71,24 @@
             minesArr[y][x].show = true
 
             if(isMine) return location.reload()
-            if(nearbyMines !== 0) return 
+            if(nearbyMines) return 
 
             let changed = true, increment = 0
             while(changed){
                 changed = false
-                for(let yPos = -1; yPos <= 1; yPos++){
-                    for(let xPos = -1; xPos <= 1; xPos++){
-                        if(minesArr[y + yPos] && minesArr[y + yPos][x + xPos] && !minesArr[y + yPos][x + xPos].show) {
-                            minesArr[y + yPos][x + xPos].show = true
-                            showBlockLoop(minesArr, {y: y + yPos, x: x + xPos})
-                            changed = true
-                            increment += 1
-                        }
+                checkAroundHelper((yPos, xPos) => {
+                    if(minesArr[y + yPos] && minesArr[y + yPos][x + xPos] && !minesArr[y + yPos][x + xPos].show) {
+                        minesArr[y + yPos][x + xPos].show = true
+                        showBlockLoop(minesArr, {y: y + yPos, x: x + xPos})
+                        changed = true, increment += 1
                     }
-                }
+                })
             }
         }
-
+        
         const Minesweeper = () => {
-            const [sweeper, setSweeper] = React.useState({
-                minesArr: [],
-                board: [],
-            })
-            const {minesArr, board } = sweeper
-
+            const newArr = generateMines()
+            
             const showBlock = (minesArr, pos) => {
                 showBlockLoop(minesArr, pos)
                 setSweeper({
@@ -101,11 +96,11 @@
                     board: renderBoard(minesArr, showBlock)
                 })
             }
-
-            React.useEffect(() => { 
-                const newArr = generateMines()
-                setSweeper({ minesArr: newArr, board: renderBoard(newArr, showBlock) })
-            }, [])
+            
+            const [{minesArr, board }, setSweeper] = React.useState({
+                minesArr: newArr,
+                board: renderBoard(newArr, showBlock),
+            })
 
             return ( <div>{board}</div> )
         }
