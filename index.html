@@ -19,14 +19,13 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const generateMines = (numOfBlocks = 96, numOfMines = 6) => {
-            let mines = numOfMines, tries = 0
-            const rows = Math.floor(Math.sqrt(numOfBlocks)), columns = Math.ceil(numOfBlocks/rows)
-            const minesArr = Array.from({length: rows}, () => Array(columns).fill().map(() => {
+        const generateMines = () => {
+            const minesArr = Array.from({length: 10}, () => Array(15).fill().map(() => {
                 return { show: false, isMine: false, nearbyMines: 0 }
             }))
 
-            while(mines > 0 && tries < 30){
+            let mines = 10
+            while(mines > 0){
                 const randomRow = Math.floor(Math.random() * minesArr.length)
                 const randomCol = Math.floor(Math.random() * minesArr[randomRow].length)
                 const blockUnit = minesArr[randomRow][randomCol]
@@ -34,7 +33,6 @@
                     mines -= 1
                     blockUnit.isMine = true
                 }
-                tries -= 1
             }
          
             minesArr.forEach((row, yIndex) => row.forEach((blockUnit, xIndex) => {
@@ -51,9 +49,7 @@
 
         const Block = (props) => {
             const {nearbyMines, show, isMine} = props.blockUnit
-            const [style, setStyle] = React.useState({
-                flag: false
-            })
+            const [style, setStyle] = React.useState({ flag: false })
 
             const contextMenuHandler = (e) => {
                 e.preventDefault()
@@ -72,14 +68,11 @@
                 <div key={y}>
                     {row.map((blockUnit, x) =>
                         <div className="block" key={`${x}`} onClick={() => showBlock(minesArr, {y, x})}>
-                            <Block
-                            pos={{y, x}} 
-                            blockUnit={blockUnit}  
-                            />
+                            <Block pos={{y, x}} blockUnit={blockUnit} />
                         </div>
                         )
                     }
-                        <br />
+                    <br />
                 </div>
                 )
             )
@@ -138,11 +131,7 @@
                 newGame()   
             }, [])
 
-            return (
-            <div>
-                {board}
-            </div>
-            )
+            return ( <div>{board}</div> )
         }
 
         ReactDOM.render(
