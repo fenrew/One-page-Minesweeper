@@ -41,16 +41,16 @@
 
         const Block = (props) => {
             const {nearbyMines, show, isMine} = props.blockUnit
-            const [style, setStyle] = React.useState({ flag: false })
+            const [{flag}, setStyle] = React.useState({ flag: false })
 
             const contextMenuHandler = (e) => {
                 e.preventDefault()
-                setStyle({ flag: !style.flag })
+                setStyle({ flag: !flag })
             }
 
             return (
-                <div style={{backgroundColor: `${style.flag ? "red" : "white"}`}} onContextMenu={contextMenuHandler}>
-                    {show ? (isMine ? "m" : nearbyMines) : (style.flag ? "F" : "X")}
+                <div style={{backgroundColor: `${flag ? "red" : "white"}`}} onContextMenu={contextMenuHandler}>
+                    {show ? (isMine ? "m" : nearbyMines) : (flag ? "F" : "X")}
                 </div>
             )
         }
