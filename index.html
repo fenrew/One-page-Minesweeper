@@ -12,6 +12,7 @@
     <style media="screen">
         .block {
             display: inline-block;
+            font-family: monospace;
             padding: 2px 5px;
         };
     </style>
@@ -69,14 +70,34 @@
                     {row.map((blockUnit, x) =>
                         <div className="block" key={`${x}`} onClick={() => showBlock(minesArr, {y, x})}>
                             <Block pos={{y, x}} blockUnit={blockUnit} />
-                        </div>
-                        )
-                    }
+                        </div>)}
                     <br />
-                </div>
-                )
-            )
+                </div> ))
         
+        const showBlockLoop = (minesArr, pos) => {
+            const {y, x} = pos, {isMine, nearbyMines} = minesArr[y][x]
+
+            minesArr[y][x].show = true
+
+            if(isMine) return location.reload()
+            if(nearbyMines !== 0) return 
+
+            let changed = true, increment = 0
+            while(changed){
+                changed = false
+                for(let yPos = -1; yPos <= 1; yPos++){
+                    for(let xPos = -1; xPos <= 1; xPos++){
+                        if(minesArr[y + yPos] && minesArr[y + yPos][x + xPos] && !minesArr[y + yPos][x + xPos].show) {
+                            minesArr[y + yPos][x + xPos].show = true
+                            showBlockLoop(minesArr, {y: y + yPos, x: x + xPos})
+                            changed = true
+                            increment += 1
+                        }
+                    }
+                }
+            }
+        }
+
         const Minesweeper = () => {
             const [sweeper, setSweeper] = React.useState({
                 minesArr: [],
@@ -92,43 +113,10 @@
                 })
             }
 
-            const showBlockLoop = (minesArr, pos) => {
-                const {y, x} = pos
-
-                minesArr[y][x].show = true
-
-                if(minesArr[y][x].isMine) return location.reload()
-
-                if(minesArr[y][x].nearbyMines !== 0) return 
-
-                let changed = true
-                let increment = 0
-                while(changed){
-                    changed = false
-                    for(let yPos = -1; yPos <= 1; yPos++){
-                        for(let xPos = -1; xPos <= 1; xPos++){
-                            if(minesArr[y + yPos] && minesArr[y + yPos][x + xPos] && !minesArr[y + yPos][x + xPos].show) {
-                                minesArr[y + yPos][x + xPos].show = true
-                                showBlockLoop(minesArr, {y: y + yPos, x: x + xPos})
-                                changed = true
-                                increment += 1
-                            }
-                    }
-                }
-               }
-            }
-
-            const newGame = () => {
+            React.useEffect(() => { 
                 const newarr = generateMines()
 
-                setSweeper({
-                    minesArr: newarr,
-                    board: renderBoard(newarr, showBlock)
-                })
-            }
-
-            React.useEffect(() => {
-                newGame()   
+                setSweeper({ minesArr: newarr, board: renderBoard(newarr, showBlock) })
             }, [])
 
             return ( <div>{board}</div> )
