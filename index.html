@@ -22,19 +22,8 @@
     <script type="text/babel">
         const generateMines = () => {
             const minesArr = Array.from({length: 10}, () => Array(15).fill().map(() => {
-                return { show: false, isMine: false, nearbyMines: 0 }
+                return { show: false, isMine: Math.random() < 0.2, nearbyMines: 0 }
             }))
-
-            let mines = 10
-            while(mines > 0){
-                const randomRow = Math.floor(Math.random() * minesArr.length)
-                const randomCol = Math.floor(Math.random() * minesArr[randomRow].length)
-                const blockUnit = minesArr[randomRow][randomCol]
-                if(!blockUnit.isMine){
-                    mines -= 1
-                    blockUnit.isMine = true
-                }
-            }
          
             minesArr.forEach((row, yIndex) => row.forEach((blockUnit, xIndex) => {
                 if(blockUnit.isMine) return
@@ -59,7 +48,7 @@
 
             return (
                 <div style={{backgroundColor: `${style.flag ? "red" : "white"}`}} onContextMenu={contextMenuHandler}>
-                    {show ? isMine ? "m" : nearbyMines : "X"}
+                    {show ? (isMine ? "m" : nearbyMines) : (style.flag ? "F" : "X")}
                 </div>
             )
         }
@@ -114,9 +103,8 @@
             }
 
             React.useEffect(() => { 
-                const newarr = generateMines()
-
-                setSweeper({ minesArr: newarr, board: renderBoard(newarr, showBlock) })
+                const newArr = generateMines()
+                setSweeper({ minesArr: newArr, board: renderBoard(newArr, showBlock) })
             }, [])
 
             return ( <div>{board}</div> )
